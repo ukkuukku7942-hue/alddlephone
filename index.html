@@ -1,0 +1,759 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>고객 맞춤형 우체국 알뜰폰 요금제 추천</title>
+    <style>
+        :root {
+            --primary-color: #e3001e;
+            --bg-color: #f7f9fb;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-radius: 12px;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+        }
+        
+        /* --- 스플래시(안내) 화면 스타일 시작 --- */
+        .splash-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(247, 249, 251, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            backdrop-filter: blur(5px);
+        }
+
+        .splash-content {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 480px;
+            border-top: 5px solid var(--primary-color);
+        }
+
+        .splash-title {
+            color: #000000;
+            font-size: 26px;
+            font-weight: 900;
+            margin-top: 0;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .notice-text {
+            font-size: 18px; 
+            line-height: 1.7;
+            color: #c62828; 
+            margin-bottom: 30px;
+            font-weight: bold; 
+            word-break: keep-all;
+            background-color: #ffebee; 
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+        }
+
+        .confirm-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 50px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .confirm-btn:hover {
+            background-color: #cc001b;
+        }
+        /* --- 스플래시(안내) 화면 스타일 끝 --- */
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-panel {
+            background-color: white;
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .filter-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .filter-label {
+            font-weight: bold;
+            width: 100px;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            flex-grow: 1;
+        }
+        
+        .filter-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .filter-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .sort-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            color: var(--text-main);
+            background-color: #f8f9fa;
+            cursor: pointer;
+            outline: none;
+            max-width: 100%;
+        }
+        .sort-select:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 4px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .network {
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .network.SKT { background-color: #ffebd6; color: #ff6a00; }
+        .network.KT { background-color: #e5f4ff; color: #0084ff; }
+        .network.LGU\+ { background-color: #fce6f0; color: #e6005c; }
+        
+        .plan-name {
+            font-size: 17px;
+            font-weight: bold;
+            margin: 0 0 15px 0;
+            line-height: 1.3;
+            color: #222;
+        }
+        
+        .specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .spec-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .spec-label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        
+        .spec-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .price {
+            margin-top: auto;
+            text-align: right;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--primary-color);
+        }
+        
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            background: white;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            border: 1px solid #eee;
+        }
+        
+        .summary-bar {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        /* 👇 추가된 플로팅 메뉴 스타일 👇 */
+        .floating-menu {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .floating-btn {
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            padding: 14px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(227, 0, 30, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .floating-btn:hover {
+            background-color: #cc001b;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(227, 0, 30, 0.4);
+        }
+
+        .floating-btn span {
+            font-size: 18px;
+        }
+        /* 👆 추가된 플로팅 메뉴 스타일 👆 */
+    </style>
+</head>
+
+<div id="splashScreen" class="splash-container">
+    <div class="splash-content">
+        <h2 class="splash-title">필독</h2>
+
+        <p class="notice-text">
+            ※ 요금제 추천 결과는 참고용입니다.<br><br>
+            안내된 데이터는 평균값 기준이며,<br>
+            유튜브 시청 시간이나 스마트폰 사용 방식에 따라<br> 실제 사용량은 달라질 수 있습니다.
+        </p>
+        <button id="btnConfirm" class="confirm-btn">확인</button>
+    </div>
+</div>
+
+<div id="mainContent" style="display: none;">
+    <div class="container">
+        <header>
+            <h1>📫 고객 맞춤형 알뜰폰 요금제 추천 프로그램</h1>
+            <div class="subtitle">최신 7월 우체국 알뜰폰 요금제 기준으로 최적의 요금제를 찾아주세요.</div>
+        </header>
+
+        <div class="filter-row" style="align-items: flex-start;">
+            <span class="filter-label" style="margin-top: 8px;">고객 패턴</span>
+            <div class="filter-group" id="categoryFilters" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                
+                <button class="filter-btn active" data-filter="all" id="btnAllCategory">전체 보기</button>
+                
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 14px; font-weight: 600; color: #555;">📞 발신 통화량:<br></span>
+                    <select id="voiceSelect" class="filter-btn" style="appearance: auto; height: 36px; padding: 0 12px; outline: none; cursor: pointer; box-sizing: border-box; font-family: inherit;">
+                        <option value="none" disabled selected hidden>선택하세요</option>
+                        <option value="voice_under_5" style="color: #333;">하루 5분 이하</option>
+                        <option value="voice_5_to_10" style="color: #333;">하루 5~10분 이하</option>
+                        <option value="voice_10_to_30" style="color: #333;">하루 10~30분 이하</option>
+                        <option value="voice_over_30" style="color: #333;">하루 30분 이상</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-size: 14px; font-weight: 600; color: #555;">📡 데이터량:<br></span>
+                    <select id="dataSelect" class="filter-btn" style="appearance: auto; height: 36px; padding: 0 12px; outline: none; cursor: pointer; box-sizing: border-box; font-family: inherit;">
+                        <option value="none" disabled selected hidden>선택하세요</option>
+                        <option value="data_0_to_1" style="color: #333;">0~1GB : 와이파이 필수 (데이터 사용 주의!)</option>
+                        <option value="data_1_to_3" style="color: #333;">1~3GB : 가벼운 카톡 (영상/사진 와이파이 권장)</option>
+                        <option value="data_3_to_5" style="color: #333;">3~5GB : 사진 위주 카톡 (유튜브 720p, 하루 5분 이내)</option>
+                        <option value="data_5_to_10" style="color: #333;">5~10GB: 유튜브 720p 기준, 하루 10~20분 이내</option>
+                        <option value="data_10_to_20" style="color: #333;">10~20GB: 유튜브 720p 기준, 하루 20~30분 이내</option>
+                        <option value="data_block" style="color: #e3001e; font-weight: bold;">🚫 기본 제공량 소진 후 차단</option>
+                        <option value="unlimited_under_1mbps" style="color: #333;">무제한(소진 후 1Mbps 이하) : 가벼운 카톡, 저화질 영상</option>
+                        <option value="unlimited_over_3mbps" style="color: #333;">무제한(소진 후 3Mbps 이상) : 유튜브 720p 시청 가능</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="filter-row">
+            <span class="filter-label">통신망</span>
+            <div class="filter-group" id="networkFilters">
+                <button class="filter-btn active" data-net="all">전체 망</button>
+                <button class="filter-btn" data-net="SKT">SKT</button>
+                <button class="filter-btn" data-net="KT">KT</button>
+                <button class="filter-btn" data-net="LGU+">LGU+</button>
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <span class="filter-label">정렬 기준</span>
+            <select id="sortSelect" class="sort-select">
+                <option value="default">기본 (추천 순서)</option>
+                <option value="price_asc">💰 가격 낮은 순</option>
+                <option value="price_desc">💰 가격 높은 순</option>
+                <option value="data_desc">📡 데이터 많은 순</option>
+            </select>
+        </div>
+
+        <div class="summary-bar" id="summaryBar">검색 결과: 0건</div>
+
+        <div class="grid" id="planGrid">
+            <div class="empty-state">해당 조건에 맞는 요금제가 없습니다.</div>
+        </div>
+    </div>
+
+    <!-- 👇 수정된 플로팅 메뉴 HTML (미리보기 전용 링크 적용) 👇 -->
+    <div class="floating-menu">
+        <a href="https://drive.google.com/file/d/1afoXLfj2kByuyjRhyOMNF34nEnBgi0-P/view" target="_blank" class="floating-btn">
+            <span>🎥</span> 알뜰폰 설명 영상
+        </a>
+        <a href="https://drive.google.com/file/d/1w9-73WNG3THt5p1eXnLG8D50Q6LAnzxd/view" target="_blank" class="floating-btn">
+            <span>📄</span> 가입 안내서 (PDF)
+        </a>
+    </div>
+</div>
+
+<script>
+    // --- 7월 요금제 JSON 데이터 (엑셀을 변환하여 삽입) ---
+    const embeddedExcelData = [
+      ["업체명", "통신망", "요금제명", "기본료", "음성", "데이터"],
+      ["유니컴즈", "SKT", "포스트 600분2GB", "4,400원\n(무약정)", "600분", "2GB"],
+      ["유니컴즈", "SKT", "포스트 400분5GB", "6,600원\n(무약정)", "400분", "5GB"],
+      ["유니컴즈", "SKT", "[S] 포스트 250분4GB", "5,500원\n(무약정)", "250분", "4GB"],
+      ["유니컴즈", "SKT", "포스트 600분3GB", "5,500원\n(무약정)", "600분", "3GB"],
+      ["유니컴즈", "SKT", "포스트 600분8GB", "9,900원\n(무약정)", "600분", "8GB"],
+      ["유니컴즈", "KT", "쑥쑥 시니어 4GB+\n(만 65세 이상만 가입 가능)", "9,900원\n(무약정)", "기본제공\n(부가통화 30분)", "4GB+1Mbps"],
+      ["유니컴즈", "KT", "쑥쑥 시니어 8GB+\n(만 65세 이상만 가입 가능)", "14,300원\n(무약정)", "기본제공\n(부가통화 30분)", "8GB+1Mbps"],
+      ["유니컴즈", "LGU+", "포스트L 600분5GB", "9,900원\n(무약정)", "600분", "5GB"],
+      ["유니컴즈", "LGU+", "포스트L 600분1GB", "5,500원\n(무약정)", "600분", "1GB"],
+      ["에넥스텔레콤", "LG", "A 갓성비 5GB/230분", "3,300원", "230분", "5GB"],
+      ["에넥스텔레콤", "LG", "A 통화맘껏 4GB", "3,740원", "1,000분", "4GB"],
+      ["에넥스텔레콤", "LG", "A 갓성비 3GB/100분", "4,400원", "100분", "3GB"],
+      ["에넥스텔레콤", "LG", "A 갓성비 1GB+/100분", "6,710원", "100분", "1GB+1Mbps"],
+      ["에넥스텔레콤", "LG", "A 스페셜 4.5GB+", "7,810원", "기본제공", "4.5GB+1Mbps"],
+      ["에넥스텔레콤", "LG", "A 갓성비 2.5GB+/250분", "9,900원", "250분", "2.5GB+1Mbps"],
+      ["에넥스텔레콤", "KT", "A LTE 차단형 라이트", "2,970원", "250분", "100MB(초과데이터 차단)"],
+      ["에넥스텔레콤", "KT", "A LTE 차단형 스마트", "3,300원", "230분", "500MB(초과데이터 차단)"],
+      ["에넥스텔레콤", "KT", "A 시니어 2GB+", "7,700원", "기본제공", "2GB+400Kbps"],
+      ["큰사람커넥트", "LGU+", "우체국이야기 5GB", "3,250원", "200분", "5GB"],
+      ["큰사람커넥트", "LGU+", "5G 함께이야기해(200분+10GB)", "8,800원", "200분", "10GB"],
+      ["큰사람커넥트", "LGU+", "이야기 500분+5GB", "5,500원", "500분", "5GB"],
+      ["큰사람커넥트", "LGU+", "이야기 라이트 4.5GB+", "11,000원", "기본제공", "4.5GB+1Mbps무제한"],
+      ["큰사람커넥트", "SKT", "5G 함께이야기해S 무한 15GB", "13,200원", "기본제공", "15GB"],
+      ["큰사람커넥트", "SKT", "5G 함께이야기해S 무한 20GB", "15,400원", "기본제공", "20GB"],
+      ["큰사람커넥트", "LGU+", "이야기 라이트 15GB+\n(24개월할인)", "24개월간 17,600원\n이후 29,700원", "기본제공", "15GB\n소진후 1Mbps무제한"],
+      ["큰사람커넥트", "LGU+", "이야기스탠다드 11GB+\n(24개월할인)", "24개월간 27,500원\n이후 37,400원", "기본제공", "11GB+매일2G\n소진후 3Mbps무제한"],
+      ["큰사람커넥트", "LGU+", "선불정액383(10.3GB)", "36,300원", "기본제공", "10.3GB+3Mbps무제한"],
+      ["아이즈비전", "SKT", "아이즈70 (250분/700MB)", "3,500원", "250분", "700MB"],
+      ["아이즈비전", "SKT", "아이즈우정(500분/11G)", "9,900원", "500분", "11GB"],
+      ["아이즈비전", "SKT", "아이즈우정(400분/4G)", "5,500원", "400분", "4GB"],
+      ["아이즈비전", "SKT", "아이즈우정(500분/6G)", "6,600원", "500분", "6GB"],
+      ["아이즈비전", "SKT", "데이터없는29", "2,900원", "180분", "100MB(데이터차단)"],
+      ["아이즈비전", "SKT", "아이즈우정(300분/6G)", "4,900원", "300분", "6GB"],
+      ["아이즈비전", "SKT", "아이즈우정(400분/10G)", "8,900원", "400분", "10GB"],
+      ["아이즈비전", "SKT", "무한 7GB+", "19,900원", "기본제공\n(부가통화300분)", "7GB+1Mbps무제한"],
+      ["아이즈비전", "SKT", "스페셜 15GB+", "28,500원", "100분", "15GB+ 3Mbps 무제한"],
+      ["KCTV모바일", "LGU+", "베이직 플랜 200분\n(국내데이터차단)", "2,750원\n(7개월부터 3,850원)", "200분", "-\n(국내데이터차단)"],
+      ["KCTV모바일", "LGU+", "가성비 플랜 5GB", "3,850원\n(7개월부터 4,950원)", "500분", "5GB\n(U+zone 무료)"],
+      ["KCTV모바일", "LGU+", "가성비 플랜 3.5GB", "4,400원", "350분", "3.5GB\n(U+zone 무료)"],
+      ["KCTV모바일", "LGU+", "알뜰 1.8G", "7,150원", "150분", "1.8GB\n(소진후자동차단)\n(U+zone무료)"],
+      ["KCTV모바일", "LGU+", "온가족 무제한 10GB+", "31,900원", "기본제공\n(부가통화 300분)", "10GB+ 1Mbps 무제한\n(U+zone무료)"],
+      ["KCTV모바일", "LGU+", "온가족 무제한 15GB+", "34,100원", "기본제공\n(부가통화 300분)", "15GB+ 1Mbps 무제한\n(U+zone무료)"],
+      ["KCTV모바일", "LGU+", "온가족 매일 무제한 2GB+", "42,900원", "기본제공\n(부가통화 300분)", "11GB+매일 2GB+소진후\n3Mbps\n(U+zone무료)"],
+      ["KCTV모바일", "LGU+", "공감 매일 5GB+", "45,100원", "기본제공\n(부가통화 300분)", "매일 5GB+소진후 5Mbps\n(U+zone무료)"],
+      ["KCTV모바일", "LGU+", "우체국 플랜 7GB+", "18,700원", "기본제공\n(부가통화 300분)", "7GB+ 1Mbps 무제한\n(U+zone무료)"],
+      ["프리티텔레콤", "LGU+", "우체국1000분4.5G", "3,300원", "1000분", "4.5GB"],
+      ["프리티텔레콤", "SKT", "프리티1000분15G(SK)", "9,900원", "1000분", "15GB"],
+      ["프리티텔레콤", "LGU+", "우체국1000분6.5G", "5,700원", "1000분", "6.5G"],
+      ["프리티텔레콤", "LGU+", "우체국1000분8.5G", "7,700원", "1000분", "8.5G"],
+      ["프리티텔레콤", "LGU+", "우체국무한5G+", "11,000원", "기본제공\n(부가음성300분)", "5GB (소진 후 1Mbps 속도\n무제한)"],
+      ["프리티텔레콤", "KT", "freeT1000분3G+1G (KT)", "3,850원", "1000분", "3GB+1GB"],
+      ["프리티텔레콤", "SKT", "(5G)우체국1000분20G(SK)", "15,400원", "1000분", "20GB"],
+      ["프리티텔레콤", "KT", "freeT무한7G+10GB(KT)", "15,800원\n(19개월부터16,900원)", "기본제공\n(부가음성300분)", "1~24개월 기본제공\n17GB/25개월~7GB\n(소진후 1Mbps 속도 무제한)"],
+      ["프리티텔레콤", "SKT", "선불데이터안심", "기본제공", "기본제공\n(부가음성50분)", "300MB (소진 후 3Mbps 속\n도 무제한)"],
+      ["한국케이블텔레콤", "KT", "음성중심LTE 21", "4,900원", "1000분", "1GB"],
+      ["한국케이블텔레콤", "KT", "우체국 티플 데이터6G", "6,000원", "300분", "6GB"],
+      ["한국케이블텔레콤", "KT", "음성중심LTE 5GB", "5,900원", "600분", "5GB"],
+      ["한국케이블텔레콤", "KT", "티플 10GB(300분)", "8,990원", "300분", "10GB"],
+      ["한국케이블텔레콤", "KT", "가성비플러스(15GB/350분)", "10,900원", "350분", "15GB"],
+      ["한국케이블텔레콤", "KT", "데이터통화안심 5GB +", "12,900원", "기본제공", "5GB+400Kbps"],
+      ["한국케이블텔레콤", "KT", "완전마음껏 10GB+", "20,900원", "기본제공", "10GB+1Mbps"],
+      ["한국케이블텔레콤", "LGU+", "티플 데이터마음껏5G(100분)", "10,900원", "100분", "5GB+1Mbps"],
+      ["한국케이블텔레콤", "LGU+", "티플 데이터마음껏10G(100분)", "13,900원", "100분", "10GB+1Mbps"]
+    ];
+
+    let globalPlans = [];
+    
+    // 상태 관리 변수
+    let currentVoice = 'all';
+    let currentData = 'all';
+    let currentNetwork = 'all';
+    let currentSort = 'default';
+
+    const planGrid = document.getElementById('planGrid');
+    const summaryBar = document.getElementById('summaryBar');
+    const voiceSelect = document.getElementById('voiceSelect');
+    const dataSelect = document.getElementById('dataSelect');
+    const btnAllCategory = document.getElementById('btnAllCategory');
+
+    // --- 화면 전환 및 데이터 로드 로직 ---
+    document.getElementById('btnConfirm').addEventListener('click', function() {
+        document.getElementById('splashScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        // 버튼을 누르는 즉시 내장된 JSON 데이터를 파싱하여 렌더링합니다.
+        parseExcelData(embeddedExcelData);
+    });
+
+    // 전체 보기 버튼 클릭 시
+    btnAllCategory.addEventListener('click', () => {
+        btnAllCategory.classList.add('active');
+        voiceSelect.value = "none";
+        dataSelect.value = "none";
+        currentVoice = 'all';
+        currentData = 'all';
+        applyFiltersAndRender();
+    });
+
+    // 통화량 드롭다운 변경 시
+    voiceSelect.addEventListener('change', (e) => {
+        btnAllCategory.classList.remove('active');
+        currentVoice = e.target.value;
+        applyFiltersAndRender();
+    });
+
+    // 데이터량 드롭다운 변경 시
+    dataSelect.addEventListener('change', (e) => {
+        btnAllCategory.classList.remove('active');
+        currentData = e.target.value;
+        applyFiltersAndRender();
+    });
+
+    // 이벤트 리스너: 통신망 필터
+    document.querySelectorAll('#networkFilters .filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('#networkFilters .filter-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentNetwork = e.target.getAttribute('data-net');
+            applyFiltersAndRender();
+        });
+    });
+
+    // 이벤트 리스너: 정렬 옵션
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+        currentSort = e.target.value;
+        applyFiltersAndRender();
+    });
+
+    // JSON 데이터 파싱 함수
+    function parseExcelData(rows) {
+        let colIdx = { company: 0, network: 1, name: 2, price: 3, voice: 4, data: 5 };
+        let plans = [];
+        
+        for(let i = 1; i < rows.length; i++) {
+            let row = rows[i];
+            if(!row || !row[colIdx.name]) continue;
+            
+            let name = (row[colIdx.name] || '').toString().trim();
+            if(!name || name === '유사상품' || name.includes('요금제명')) continue; 
+            
+            let company = (row[colIdx.company] || '').toString().trim();
+            let network = (row[colIdx.network] || '').toString().trim();
+            let price = (row[colIdx.price] || '').toString().trim();
+            let voice = (row[colIdx.voice] || '').toString().trim();
+            let data = (row[colIdx.data] || '').toString().trim();
+            
+            let category = [];
+
+            // 1. 음성통화 카테고리 로직 (쉼표 제거 적용)
+            if (voice.includes('기본제공') || voice.includes('무제한')) {
+                category.push('voice_over_30');
+            } else {
+                let cleanVoice = voice.replace(/,/g, ''); // 버그 픽스: "1,000분"의 쉼표 제거
+                let vMatch = cleanVoice.match(/\d+/);
+                if (vMatch) {
+                    let totalMins = parseInt(vMatch[0], 10);
+                    let dailyVoice = totalMins / 30.0;
+                    
+                    if (dailyVoice <= 5) {
+                        category.push('voice_under_5');
+                    } else if (dailyVoice > 5 && dailyVoice <= 10) {
+                        category.push('voice_5_to_10');
+                    } else if (dailyVoice > 10 && dailyVoice <= 30) {
+                        category.push('voice_10_to_30');
+                    } else {
+                        category.push('voice_over_30');
+                    }
+                }
+            }
+            
+            // 2. 데이터량 카테고리 추출 로직 (쉼표 제거 적용)
+            let gbVal = 0.0;
+            let speedVal = 0.0;
+            let isUnlimited = false;
+            let dataUpper = data.toUpperCase().replace(/,/g, ''); // 혹시 모를 데이터량 쉼표 오류 방지
+            let tempStr = dataUpper;
+
+            if (dataUpper.includes('차단')) {
+                category.push('data_block');
+            }
+
+            let dailyMatch = tempStr.match(/(?:일|매일)\s*([\d\.]+)\s*(?:GB|G)/);
+            if (dailyMatch) {
+                gbVal += parseFloat(dailyMatch[1]) * 30;
+                tempStr = tempStr.replace(dailyMatch[0], '');
+            }
+
+            let gbMatches = tempStr.match(/([\d\.]+)\s*(?:GB|G)/g);
+            if (gbMatches) {
+                gbMatches.forEach(match => {
+                    let num = match.match(/[\d\.]+/);
+                    if(num) gbVal += parseFloat(num[0]);
+                });
+            }
+
+            let mbMatches = tempStr.match(/([\d\.]+)\s*MB(?!PS)/g);
+            if (mbMatches) {
+                 mbMatches.forEach(match => {
+                    let num = match.match(/[\d\.]+/);
+                    if(num) gbVal += (parseFloat(num[0]) / 1024.0);
+                });
+            }
+
+            let mbpsMatch = dataUpper.match(/([\d\.]+)\s*MBPS/);
+            if (mbpsMatch) {
+                speedVal = parseFloat(mbpsMatch[1]);
+                isUnlimited = true;
+            } else {
+                let kbpsMatch = dataUpper.match(/([\d\.]+)\s*KBPS/);
+                if (kbpsMatch) {
+                    speedVal = parseFloat(kbpsMatch[1]) / 1000.0;
+                    isUnlimited = true;
+                }
+            }
+
+            if (dataUpper.includes('기본제공') || dataUpper.includes('무제한')) {
+                isUnlimited = true;
+                if (speedVal === 0 && gbVal === 0) gbVal = 999;
+            }
+
+            if (gbVal > 0 || category.length > 0) { 
+                if (gbVal >= 0 && gbVal <= 1) category.push('data_0_to_1');
+                if (gbVal >= 1 && gbVal <= 3) category.push('data_1_to_3');
+                if (gbVal >= 3 && gbVal <= 5) category.push('data_3_to_5');
+                if (gbVal >= 5 && gbVal <= 10) category.push('data_5_to_10');
+                if (gbVal >= 10 && gbVal <= 20) category.push('data_10_to_20');
+            }
+
+            if (isUnlimited) {
+                if (speedVal > 0 && speedVal <= 1.0) {
+                    category.push('unlimited_under_1mbps');
+                } else if (speedVal >= 3.0 || (speedVal === 0 && gbVal === 999)) {
+                    category.push('unlimited_over_3mbps');
+                }
+            }
+
+            // 3. 가격 데이터 추출
+            let priceVal = 0;
+            let priceNumbers = price.replace(/,/g, '').match(/\d+/g);
+            if(priceNumbers) {
+                let candidates = priceNumbers.map(Number).filter(n => n >= 1000);
+                if (candidates.length > 0) priceVal = candidates[0];
+                else priceVal = Number(priceNumbers[0]);
+            }
+
+            plans.push({
+                company, network, name, price, voice, data, category,
+                priceVal, gbVal, 
+                originalIndex: i
+            });
+        }
+        
+        globalPlans = plans;
+        applyFiltersAndRender();
+    }
+
+    function applyFiltersAndRender() {
+        if (globalPlans.length === 0) return;
+
+        let filtered = globalPlans.filter(plan => {
+            let matchVoice = (currentVoice === 'all' || currentVoice === 'none') || plan.category.includes(currentVoice);
+            let matchData = (currentData === 'all' || currentData === 'none') || plan.category.includes(currentData);
+            
+            let matchNetwork = false;
+            if (currentNetwork === 'all') {
+                matchNetwork = true;
+            } else {
+                let netUpper = plan.network.toUpperCase();
+                if (currentNetwork === 'SKT') {
+                    matchNetwork = netUpper.includes('SK');
+                } else if (currentNetwork === 'KT') {
+                    matchNetwork = netUpper.includes('KT') && !netUpper.includes('SK');
+                } else if (currentNetwork === 'LGU+') {
+                    matchNetwork = netUpper.includes('LG') || netUpper.includes('U+');
+                }
+            }
+            
+            return matchVoice && matchData && matchNetwork;
+        });
+
+        if (currentSort === 'price_asc') {
+            filtered.sort((a, b) => a.priceVal - b.priceVal);
+        } else if (currentSort === 'price_desc') {
+            filtered.sort((a, b) => b.priceVal - a.priceVal);
+        } else if (currentSort === 'data_desc') {
+            filtered.sort((a, b) => b.gbVal - a.gbVal);
+        } else {
+            filtered.sort((a, b) => a.originalIndex - b.originalIndex);
+        }
+
+        renderDOM(filtered);
+    }
+
+    function renderDOM(filtered) {
+        planGrid.innerHTML = '';
+        summaryBar.textContent = `검색 결과: 총 ${filtered.length}건의 요금제가 검색되었습니다.`;
+        
+        if (filtered.length === 0) {
+            planGrid.innerHTML = '<div class="empty-state">해당 조건에 맞는 요금제가 없습니다.</div>';
+            return;
+        }
+
+        filtered.forEach(plan => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            
+            let netUpper = plan.network.toUpperCase();
+            let netClass = 'SKT';
+            if (netUpper.includes('SK')) {
+                netClass = 'SKT';
+            } else if (netUpper.includes('KT') && !netUpper.includes('SK')) {
+                netClass = 'KT';
+            } else if (netUpper.includes('LG') || netUpper.includes('U+')) {
+                netClass = 'LGU+';
+            }
+            
+            card.innerHTML = `
+                <div class="card-header" style="justify-content: flex-start; gap: 8px;">
+                    <span class="network ${netClass}">${plan.network}</span>
+                    <span class="company" style="font-size: 15px; font-weight: 700; color: #555;">${plan.company}</span>
+                </div>
+                <h3 class="plan-name">${plan.name}</h3>
+                <div class="specs">
+                    <div class="spec-item">
+                        <span class="spec-label">음성통화</span>
+                        <span class="spec-value">${plan.voice}</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">데이터</span>
+                        <span class="spec-value">${plan.data}</span>
+                    </div>
+                </div>
+                <div class="price">${plan.price}</div>
+            `;
+            planGrid.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
